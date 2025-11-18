@@ -1,5 +1,5 @@
-# 🚀 Documentation d'installation
-## Déploiement sur un serveur Proxmox
+# 🚀 Documentation d'installation 
+## Déploiement sur un serveur Proxmox Project Coursa
 
 ---
 
@@ -10,14 +10,28 @@ Serveur Proxmox : [https://ns3107703.ip-54-36-179.eu:8006](https://ns3107703.ip-
 * Serveur Proxmox VE installé
 * Un conteneur **LXC Debian/Ubuntu** ou une VM
 
-<img width="1355" height="606" alt="image" src="https://github.com/user-attachments/assets/952295b5-b5f0-4027-91cf-7856656e47b2" />
 
 * Docker & Docker Compose installés sur la VM/LXC
-
-<img width="986" height="558" alt="image" src="https://github.com/user-attachments/assets/628aea05-bb3c-4e4f-9353-0f83f25d8e71" />
-
-
 * Vos projets frontend et backend déjà poussés sur GitHub
+
+https://github.com/melotrex/coursa-backend
+https://github.com/melotrex/coursa_frontend_senegal
+
+
+* Connecter sur ubuntu est update && apgrade 
+
+
+<img width="532" height="307" alt="image" src="https://github.com/user-attachments/assets/7e8faa90-f71a-4769-a166-38be1ddeafc5" />
+
+install tout les tool de project comme node docker ect 
+
+<img width="527" height="342" alt="image" src="https://github.com/user-attachments/assets/31d8721f-2d3b-4e8e-9a58-cedfd4627a50" />
+
+verifer les installation tool --version comme sur image 
+
+<img width="223" height="96" alt="image" src="https://github.com/user-attachments/assets/74581638-3f87-4c0f-b130-5ec241602a90" />
+
+
 
 ---
 
