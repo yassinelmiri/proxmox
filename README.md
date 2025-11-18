@@ -1,239 +1,105 @@
-# 🚀 Documentation d'installation 
-## Déploiement sur un serveur Proxmox Project Coursa
+# 🚀 **Déploiement du Projet Coursa – Infrastructure Proxmox + Docker**
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/7e8faa90-f71a-4769-a166-38be1ddeafc5" width="420" />
+</p>
+
+<p align="center">
+  <b>Backend : NestJS • Frontend : Next.js • Base de données : PostgreSQL • Déploiement : Proxmox + Docker</b>
+</p>
 
 ---
 
-# 📌 1. Prérequis
+# 📚 **Sommaire**
 
-Serveur Proxmox : [https://ns3107703.ip-54-36-179.eu:8006](https://ns3107703.ip-54-36-179.eu:8006)
-
-* Serveur Proxmox VE installé
-* Un conteneur **LXC Debian/Ubuntu** ou une VM
-
-
-* Docker & Docker Compose installés sur la VM/LXC
-* Vos projets frontend et backend déjà poussés sur GitHub
-
-https://github.com/melotrex/coursa-backend
-https://github.com/melotrex/coursa_frontend_senegal
-
-
-* Connecter sur ubuntu est update && apgrade 
-
-
-<img width="532" height="307" alt="image" src="https://github.com/user-attachments/assets/7e8faa90-f71a-4769-a166-38be1ddeafc5" />
-
-install tout les tool de project comme node docker ect 
-
-<img width="527" height="342" alt="image" src="https://github.com/user-attachments/assets/31d8721f-2d3b-4e8e-9a58-cedfd4627a50" />
-
-verifer les installation tool --version comme sur image 
-
-<img width="223" height="96" alt="image" src="https://github.com/user-attachments/assets/74581638-3f87-4c0f-b130-5ec241602a90" />
-
-
+1. [Prérequis](#-prérequis)
+2. [Installation des outils](#-installation-des-outils)
+3. [Installation Docker & Docker Compose](#-installer-docker-et-docker-compose)
+4. [Clonage des projets GitHub](#-cloner-les-projets-github)
+5. [Dockerfile Backend/Frontend](#-exemple-de-dockerfile)
+6. [docker-compose.yml complet](#-docker-composeyml-backend--frontend--postgresql)
+7. [Lancement des services](#-lancer-les-services-docker)
+8. [Reverse Proxy (NGINX Proxy Manager)](#-reverse-proxy-nginx-proxy-manager)
+9. [Déploiement sur Proxmox (VM/LXC)](#-déploiement-complet-sur-proxmox)
+10. [Mises à jour continue](#-mise-à-jour-après-push-github)
+11. [Vérification des services](#-vérifier-les-services)
+12. [Conclusion](#-conclusion)
 
 ---
 
-# 📌 2. Installer Docker et Docker Compose
+# 📌 **Prérequis**
+
+### ✔ Serveur Proxmox
+
+🔗 **Panel Proxmox :** [https://ns3107703.ip-54-36-179.eu:8006](https://ns3107703.ip-54-36-179.eu:8006)
+
+Vous devez disposer de :
+
+* Un serveur **Proxmox VE** fonctionnel
+* Une VM ou un conteneur **LXC Ubuntu/Debian**
+* **Docker + Docker Compose** installés
+* Vos projets GitHub :
+
+| Projet           | Lien                                                                                                       |
+| ---------------- | ---------------------------------------------------------------------------------------------------------- |
+| Backend NestJS   | [https://github.com/melotrex/coursa-backend](https://github.com/melotrex/coursa-backend)                   |
+| Frontend Next.js | [https://github.com/melotrex/coursa_frontend_senegal](https://github.com/melotrex/coursa_frontend_senegal) |
+
+---
+
+# 📌 **Installation des outils**
 
 ```bash
 sudo apt update && sudo apt upgrade -y
-sudo apt install ca-certificates curl gnupg -y
-
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.asc > /dev/null
-
-echo \"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-sudo apt update
-sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
+sudo apt install git curl wget htop net-tools -y
 ```
 
-Vérifier :
+### 🖼 Capture d'installation des outils
 
-```bash
-docker --version
-docker compose version
-```
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/7e8faa90-f71a-4769-a166-38be1ddeafc5" width="480" />
+</p>
 
 ---
 
-# 📌 3. Cloner vos projets GitHub sur le serveur Proxmox
+# 📌 **Vérification des outils installés**
 
-### 🔹 Backend NestJS
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/31d8721f-2d3b-4e8e-9a58-cedfd4627a50" width="480" />
+</p>
 
-```bash
-git clone https://github.com/melotrex/coursa-backend.git
-cd backend-nest
-```
-
-### 🔹 Frontend Next.js
-
-```bash
-git clone https://github.com/melotrex/coursa_frontend_senegal.git
-cd frontend-next
-```
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/74581638-3f87-4c0f-b130-5ec241602a90" width="260" />
+</p>
 
 ---
 
-# 📌 4. Exemple de structure Docker
-
-### 🔹 Dockerfile (Backend NestJS)
-
-```Dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install --production
-COPY . .
-CMD [\"npm\", \"run\", \"start:prod\"]
-```
-
-### 🔹 Dockerfile (Frontend Next.js)
-
-```Dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
-CMD [\"npm\", \"start\"]
-```
-
----
-
-# 📌 5. docker-compose.yml (Backend + Frontend + PostgreSQL)
-
-```yaml
-version: '3.8'
-services:
-  backend:
-    build: ./backend-nest
-    container_name: nest_api
-    ports:
-      - "3001:3001"
-    depends_on:
-      - db
-    environment:
-      DATABASE_URL: postgres://postgres:admin@db:5432/app
-    restart: always
-
-  frontend:
-    build: ./frontend-next
-    container_name: next_front
-    ports:
-      - "3000:3000"
-    restart: always
-
-  db:
-    image: postgres:15
-    container_name: pg_db
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: app
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-volumes:
-  pgdata:
-```
-
----
-
-# 📌 6. Lancer les services Docker
-
-```bash
-docker compose up -d --build
-```
-
-Vérifier les conteneurs :
-
-```bash
-docker ps
-```
-
----
-
-# 📌 7. Configuration DNS / Reverse Proxy (Optionnel mais recommandé)
-
-Installer **NGINX Proxy Manager** :
-
-```bash
-docker compose up -d
-```
-
-Créer un hôte :
-
-* frontend : [https://app.votredomaine.com](https://app.votredomaine.com) → port 3000
-* backend : [https://api.votredomaine.com](https://api.votredomaine.com) → port 3001
-
----
-
-# 📌 8. Déployer dans Proxmox avec un LXC/VM
-
-1. Créer une VM Debian/Ubuntu
-2. Donner 2 Go RAM minimum
-3. Installer Docker
-4. Cloner vos projets GitHub
-5. Lancer `docker compose up -d`
-
----
-
-# 📌 9. Mise à jour après push GitHub
-
-### 🔹 Mise à jour du backend
-
-```bash
-cd backend-nest
-git pull
-docker compose up -d --build backend
-```
-
-### 🔹 Mise à jour du frontend
-
-```bash
-cd frontend-next
-git pull
-docker compose up -d --build frontend
-```
-
----
-
-# 📌 9. Installation complète depuis Proxmox (Étape par Étape)
-
-## 🟦 Étape 1 — Installer une VM Ubuntu dans Proxmox
-
-1. Se connecter à votre Proxmox : `https://ns3107703.ip-54-36-179.eu:8006`
-2. Télécharger une ISO **Ubuntu Server 22.04 LTS** (ou 24.04)
-3. Aller dans : `Datacenter → Storage (local) → ISO Images → Upload`
-4. Créer une nouvelle VM :
-
-   * OS : Ubuntu ISO
-   * CPU : 2 vCPU
-   * RAM : 2 à 4 Go
-   * Disque : 20 Go recommandé
-   * Réseau : Bridge `vmbr0`
-
-Démarrer la VM puis installer Ubuntu normalement.
-
----
-
-## 🟦 Étape 2 — Installer Docker + Docker Compose sur Ubuntu
+# 📌 **Installer Docker et Docker Compose**
 
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install ca-certificates curl gnupg git -y
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.asc >/dev/null
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+```
+
+Ajout du dépôt Docker :
+
+```bash
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+  sudo tee /etc/apt/keyrings/docker.asc > /dev/null
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] \
+https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
+sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+```
+
+Installation :
+
+```bash
 sudo apt update
 sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
 ```
 
-Vérifier :
+Vérification :
 
 ```bash
 docker --version
@@ -242,48 +108,7 @@ docker compose version
 
 ---
 
-## 🟦 Étape 3 — Installer Node.js & NPM (si besoin hors Docker)
-
-```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt install -y nodejs
-node -v
-npm -v
-```
-
----
-
-## 🟦 Étape 4 — Créer un LXC pour exécuter les projets (optionnel)
-
-👉 Si tu préfères tout mettre dans une VM, ignore cette étape.
-
-### 1. Télécharger template Ubuntu pour LXC
-
-Proxmox → `local → CT Templates → Templates → Ubuntu 22.04`
-
-### 2. Créer un conteneur LXC
-
-* OS : Ubuntu Template
-* CPU : 2
-* RAM : 2–4 Go
-* Storage : 8–16 Go
-* Network : Bridge `vmbr0`
-
-### 3. Entrer dans le LXC
-
-```bash
-pct enter 100
-```
-
-(100 = ID du conteneur)
-
-### 4. Installer Docker dans le LXC
-
-Même commandes que plus haut.
-
----
-
-## 🟦 Étape 5 — Cloner vos projets GitHub
+# 📌 **Cloner les projets GitHub**
 
 ### Backend NestJS
 
@@ -292,7 +117,7 @@ git clone https://github.com/melotrex/coursa-backend
 cd coursa-backend
 ```
 
-### Frontend Next.js
+### Frontend NextJS
 
 ```bash
 git clone https://github.com/melotrex/coursa_frontend_senegal
@@ -301,53 +126,168 @@ cd coursa_frontend_senegal
 
 ---
 
-## 🟦 Étape 6 — Lancer les projets avec Docker
+# 📌 **Exemple de Dockerfile**
 
-Dans le répertoire qui contient `docker-compose.yml` :
+## 🔹 Backend NestJS
+
+```Dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --production
+COPY . .
+CMD ["npm", "run", "start:prod"]
+```
+
+## 🔹 Frontend Next.js
+
+```Dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+CMD ["npm", "start"]
+```
+
+---
+
+# 📌 **docker-compose.yml – Backend + Frontend + PostgreSQL**
+
+```yaml
+version: "3.8"
+
+services:
+  backend:
+    build: ./coursa-backend
+    container_name: coursa_backend
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgres://postgres:admin@db:5432/coursa
+    depends_on:
+      - db
+    restart: always
+
+  frontend:
+    build: ./coursa_frontend_senegal
+    container_name: coursa_frontend
+    ports:
+      - "3000:3000"
+    restart: always
+
+  db:
+    image: postgres:15
+    container_name: coursa_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: coursa
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  pgdata:
+```
+
+---
+
+# 📌 **Lancer les services Docker**
 
 ```bash
 docker compose up -d --build
 ```
 
-Si backend et frontend sont séparés :
+Vérifier :
+
+```bash
+docker ps
+```
+
+---
+
+# 📌 **Reverse Proxy – NGINX Proxy Manager (Recommandé)**
+
+Permet d'avoir :
+
+* [https://app.coursa.com](https://app.coursa.com) → Frontend (3000)
+* [https://api.coursa.com](https://api.coursa.com) → Backend (3001)
+
+Installation :
+
+```bash
+docker compose up -d
+```
+
+Ajouter vos domaines → activer **SSL Let's Encrypt**.
+
+---
+
+# 📌 **Déploiement complet sur Proxmox**
+
+## 1️⃣ Créer une VM Ubuntu
+
+* CPU : 2 vCPU
+* RAM : 2–4 Go
+* Disque : 20 Go
+* Réseau : `vmbr0`
+
+## 2️⃣ Installer Docker & outils
+
+→ (voir étapes précédentes)
+
+## 3️⃣ Cloner projets GitHub
+
+## 4️⃣ Lancer Docker
+
+## 5️⃣ Configurer DNS + Proxy (optionnel)
+
+---
+
+# 📌 **Mise à jour après push GitHub**
 
 ### Backend
 
 ```bash
 cd coursa-backend
-docker compose up -d --build
+git pull
+docker compose up -d --build backend
 ```
 
 ### Frontend
 
 ```bash
 cd coursa_frontend_senegal
-docker compose up -d --build
+git pull
+docker compose up -d --build frontend
 ```
 
 ---
 
-## 🟦 Étape 7 — Vérifier les services
+# 📌 **Vérifier les services**
 
 ```bash
 docker ps
 ```
 
-Tu dois voir :
+Vous devez voir :
 
-* NestJS → port 3001
-* NextJS → port 3000
-* PostgreSQL / MySQL (selon ton projet)
+* ✔ Backend : port 3001
+* ✔ Frontend : port 3000
+* ✔ PostgreSQL : port 5432
 
 ---
 
-## 📌 10. Conclusion
+# 🎯 **Conclusion**
 
-Vous avez maintenant un environnement complet **NextJS + NestJS + PostgreSQL** entièrement déployé avec Docker sur un serveur Proxmox.
+Votre infrastructure **Coursa** est maintenant entièrement opérationnelle :
 
-Si tu veux, je peux aussi :
-
-* générer une version plus professionnelle
-* ajouter des schémas d'architecture
-* ajouter une section CI/CD GitHub Actions
-* ajouter un script automatique d'installation
+✨ Backend NestJS
+✨ Frontend NextJS
+✨ Base PostgreSQL
+✨ Déployés avec Docker
+✨ Hébergés sur Proxmox
+✨ Option SSL + Proxy disponible
