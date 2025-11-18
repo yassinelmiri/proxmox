@@ -36,7 +36,12 @@
 Vous devez disposer de :
 
 * Un serveur **Proxmox VE** fonctionnel
-* Une VM ou un conteneur **LXC Ubuntu/Debian**
+* Une VM ou un conteneur **LXC Ubuntu**
+
+<img width="1355" height="519" alt="image" src="https://github.com/user-attachments/assets/05f90c96-9f82-46da-99f0-bb21a07b115c" />
+
+<img width="719" height="538" alt="image" src="https://github.com/user-attachments/assets/00e4da86-38ec-4cf7-8e39-ac1d130f0702" />
+
 * **Docker + Docker Compose** installés
 * Vos projets GitHub :
 
@@ -291,4 +296,5 @@ Votre infrastructure **Coursa** est maintenant entièrement opérationnelle :
 ✨ Déployés avec Docker
 ✨ Hébergés sur Proxmox
 ✨ Option SSL + Proxy disponible
+
 
